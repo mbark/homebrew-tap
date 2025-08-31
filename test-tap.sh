@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 TAP_NAME="homebrew-tap"
 FORMULA_NAME="sindr"
 
-brew cleanup
+brew cleanup >/dev/null 2>&1
 
 echo -e "${YELLOW}Testing Homebrew tap locally...${NC}"
 

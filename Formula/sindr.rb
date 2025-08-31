@@ -9,6 +9,7 @@ class Sindr < Formula
 
   def install
     system "go", "build", "-ldflags", "-s -w", "-o", bin/"sindr", "./cmd/main.go"
+    generate_completions_from_executable(bin/"sindr", "completion")
   end
 
   test do

@@ -11,6 +11,8 @@ NC='\033[0m' # No Color
 TAP_NAME="homebrew-tap"
 FORMULA_NAME="sindr"
 
+brew cleanup
+
 echo -e "${YELLOW}Testing Homebrew tap locally...${NC}"
 
 # Get the current directory (should be the tap root)
@@ -18,21 +20,21 @@ TAP_DIR=$(pwd)
 
 # Verify we're in a tap directory
 if [ ! -d "Formula" ]; then
-    echo -e "${RED}Error: Not in a Homebrew tap directory (no Formula/ directory found)${NC}"
-    exit 1
+  echo -e "${RED}Error: Not in a Homebrew tap directory (no Formula/ directory found)${NC}"
+  exit 1
 fi
 
 if [ ! -f "Formula/${FORMULA_NAME}.rb" ]; then
-    echo -e "${RED}Error: Formula/${FORMULA_NAME}.rb not found${NC}"
-    exit 1
+  echo -e "${RED}Error: Formula/${FORMULA_NAME}.rb not found${NC}"
+  exit 1
 fi
 
 echo -e "${YELLOW}✓ Found Formula/${FORMULA_NAME}.rb${NC}"
 
 # Check if tap is already added
 if brew tap | grep -q "$(basename $TAP_DIR)"; then
-    echo -e "${YELLOW}Tap already exists, removing first...${NC}"
-    brew untap "$(whoami)/$(basename $TAP_DIR)" || true
+  echo -e "${YELLOW}Tap already exists, removing first...${NC}"
+  brew untap "$(whoami)/$(basename $TAP_DIR)" || true
 fi
 
 # Add the local tap
@@ -46,40 +48,42 @@ brew audit "$(whoami)/$(basename $TAP_DIR)/${FORMULA_NAME}" || echo -e "${YELLOW
 # Test installation (in verbose mode to see what's happening)
 echo -e "${YELLOW}Testing installation (dry run)...${NC}"
 if brew install --dry-run "$(whoami)/$(basename $TAP_DIR)/${FORMULA_NAME}" 2>&1; then
-    echo -e "${GREEN}✓ Formula can be installed (dry run successful)${NC}"
+  echo -e "${GREEN}✓ Formula can be installed (dry run successful)${NC}"
 else
-    echo -e "${YELLOW}Warning: Dry run had issues, trying actual install...${NC}"
+  echo -e "${YELLOW}Warning: Dry run had issues, trying actual install...${NC}"
 fi
 
 # Try actual installation
 echo -e "${YELLOW}Installing ${FORMULA_NAME}...${NC}"
 if brew install "$(whoami)/$(basename $TAP_DIR)/${FORMULA_NAME}" 2>&1; then
-    echo -e "${GREEN}✓ Installation successful${NC}"
-    
-    # Test that the binary works
-    echo -e "${YELLOW}Testing installed binary...${NC}"
+  echo -e "${GREEN}✓ Installation successful${NC}"
+
+  # Test that the binary works
+  echo -e "${YELLOW}Testing installed binary...${NC}"
+  if command -v ${FORMULA_NAME} >/dev/null 2>&1; then
+    ${FORMULA_NAME} --help
+    echo -e "${GREEN}✓ Binary works correctly${NC}"
+
+    # Test uninstallation
+    echo -e "${YELLOW}Testing uninstallation...${NC}"
+    brew uninstall "$(whoami)/$(basename $TAP_DIR)/${FORMULA_NAME}"
+
+    hash -r
+
+    # Verify binary is removed
     if command -v ${FORMULA_NAME} >/dev/null 2>&1; then
-        ${FORMULA_NAME} --help
-        echo -e "${GREEN}✓ Binary works correctly${NC}"
-        
-        # Test uninstallation
-        echo -e "${YELLOW}Testing uninstallation...${NC}"
-        brew uninstall "$(whoami)/$(basename $TAP_DIR)/${FORMULA_NAME}"
-        
-        # Verify binary is removed
-        if command -v ${FORMULA_NAME} >/dev/null 2>&1; then
-            echo -e "${RED}✗ Binary still exists after uninstall${NC}"
-            exit 1
-        else
-            echo -e "${GREEN}✓ Binary successfully removed${NC}"
-        fi
+      echo -e "${RED}✗ Binary still exists after uninstall${NC}"
+      exit 1
     else
-        echo -e "${YELLOW}Warning: Binary not found in PATH, but installation reported success${NC}"
-        # Still try to uninstall
-        brew uninstall "$(whoami)/$(basename $TAP_DIR)/${FORMULA_NAME}" 2>/dev/null || true
+      echo -e "${GREEN}✓ Binary successfully removed${NC}"
     fi
+  else
+    echo -e "${YELLOW}Warning: Binary not found in PATH, but installation reported success${NC}"
+    # Still try to uninstall
+    brew uninstall "$(whoami)/$(basename $TAP_DIR)/${FORMULA_NAME}" 2>/dev/null || true
+  fi
 else
-    echo -e "${YELLOW}Warning: Installation failed, but tap structure is valid${NC}"
+  echo -e "${YELLOW}Warning: Installation failed, but tap structure is valid${NC}"
 fi
 
 # Clean up - remove tap

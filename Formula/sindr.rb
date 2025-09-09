@@ -1,8 +1,8 @@
 class Sindr < Formula
   desc "Project-specific commands as a CLI"
   homepage "https://github.com/mbark/sindr"
-  url "https://github.com/mbark/sindr/archive/refs/tags/v0.0.9.tar.gz"
-  sha256 "fffb9bd9a45ead32e060bb161998bd08780a7de9331aa6f5d06ad44eb2cb0912"
+  url "https://github.com/mbark/sindr/archive/refs/tags/v0.0.12.tar.gz"
+  sha256 "444dda2926da4dff6444d6c668a3f7b8d4f249bd77b3178a1a27a5c3b33f86b2"
   license "MIT"
 
   depends_on "go" => :build
